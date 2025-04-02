@@ -9,9 +9,9 @@ app = Flask(__name__)
 DATA_FILE = 'transactions.csv'
 
 PRICES = {
-    0: {'large': 333, 'medium': 160, 'small': 73},
-    1: {'large': 313, 'medium': 150.5, 'small': 68.5},
-    2: {'large': 320, 'medium': 153.5, 'small': 70}
+    0: {'large': 3330, 'medium': 1600, 'small': 730},
+    1: {'large': 3130, 'medium': 1505, 'small': 685},
+    2: {'large': 3200, 'medium': 1535, 'small': 700}
 }
 
 WEIGHTS = {'large': 12, 'medium': 6, 'small': 2.7}
@@ -85,12 +85,12 @@ def index():
             small_qty * price_table['small']
         )
 
-        total_gas = (
+        total_gas_kg = (
             large_qty * WEIGHTS['large'] +
             medium_qty * WEIGHTS['medium'] +
             small_qty * WEIGHTS['small']
         )
-
+        total_gas = total_gas_kg / 1000
         transaction = {
             "id": str(uuid.uuid4()),
             "datetime": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
