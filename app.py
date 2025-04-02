@@ -3,6 +3,7 @@ from datetime import datetime
 import csv
 import os
 import uuid
+from collections import defaultdict
 
 app = Flask(__name__)
 
@@ -103,56 +104,43 @@ def index():
         }
 
         save_transaction(transaction)
-        message = f"✅ تمت العملية بنجاح! المبلغ المطلوب: {total_price} MRU"
+        message = f"\u2705 تمت العملية بنجاح! المبلغ المطلوب: {total_price} MRU"
 
     return render_template("index.html", message=message)
 
 @app.route("/daily-summary")
 def daily_summary():
-    today_transactions = read_transactions_for_today()
-    total_money = sum(t["total_price"] for t in today_transactions)
-    total_gas = sum(t["total_gas"] for t in today_transactions)
-    return render_template("daily_summary.html", total_money=total_money, total_gas=total_gas, transactions=today_transactions)
-
-@app.route("/delete/<transaction_id>")
-def delete_transaction(transaction_id):
-    delete_transaction_by_id(transaction_id)
-    return redirect(url_for('daily_summary'))
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
-@app.route("/daily-summary")
-def daily_summary():
     summaries = defaultdict(lambda: {"total_money": 0, "total_gas": 0, "count": 0})
-    with open("transactions.csv", newline='', encoding='utf-8') as file:
+    with open(DATA_FILE, newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
         for row in reader:
-            date = row["date"]
+            date = row["datetime"].split(" ")[0]
             summaries[date]["total_money"] += float(row["total_price"])
             summaries[date]["total_gas"] += float(row["total_gas"])
             summaries[date]["count"] += 1
     return render_template("daily_summary.html", summaries=summaries)
+
 @app.route("/summary/<date>")
 def summary_day(date):
     records = []
-    with open("transactions.csv", newline='', encoding='utf-8') as file:
+    with open(DATA_FILE, newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
         for row in reader:
-            if row["date"] == date:
+            if row["datetime"].startswith(date):
                 records.append(row)
     return render_template("summary_day.html", date=date, records=records)
+
 @app.route("/delete/<id>", methods=["GET", "POST"])
 def delete_transaction(id):
     if request.method == "POST":
-        # حذف المعاملة من CSV
         rows = []
-        with open("transactions.csv", newline='', encoding='utf-8') as f:
+        with open(DATA_FILE, newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
                 if row["id"] != id:
                     rows.append(row)
 
-        with open("transactions.csv", "w", newline='', encoding='utf-8') as f:
+        with open(DATA_FILE, "w", newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=rows[0].keys())
             writer.writeheader()
             writer.writerows(rows)
@@ -160,17 +148,18 @@ def delete_transaction(id):
         return redirect(url_for("daily_summary"))
 
     return render_template("confirm_delete.html", id=id)
+
 @app.route("/delete_day/<date>", methods=["GET", "POST"])
 def delete_day(date):
     if request.method == "POST":
         rows = []
-        with open("transactions.csv", newline='', encoding='utf-8') as f:
+        with open(DATA_FILE, newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
-                if row["date"] != date:
+                if not row["datetime"].startswith(date):
                     rows.append(row)
 
-        with open("transactions.csv", "w", newline='', encoding='utf-8') as f:
+        with open(DATA_FILE, "w", newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=rows[0].keys())
             writer.writeheader()
             writer.writerows(rows)
@@ -178,3 +167,6 @@ def delete_day(date):
         return redirect(url_for("daily_summary"))
 
     return render_template("confirm_delete_day.html", date=date)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
