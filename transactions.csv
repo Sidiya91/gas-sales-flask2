@@ -1,2 +1,5 @@
-id,datetime,customer_type,large_qty,medium_qty,small_qty,total_price,total_gas
-e7ae4253-0b80-4877-8e93-6b60a2beb0a4,2025-04-02 12:47:46,1,2,5,6,1789.5,70.2
+id,date,customer_type,large_qty,medium_qty,small_qty,total_price,total_gas
+1,2025-04-01,0,10,5,2,4125,0.3
+2,2025-04-01,1,20,10,4,8000,0.6
+3,2025-04-02,0,15,7,3,5500,0.42
+4,2025-04-02,2,40,0,0,12800,0.48

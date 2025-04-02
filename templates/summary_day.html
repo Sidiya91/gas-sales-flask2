@@ -1,0 +1,23 @@
+<h2>📅 المعاملات بتاريخ {{ date }}</h2>
+<table>
+    <tr>
+        <th>النوع</th>
+        <th>كبيرة</th>
+        <th>متوسطة</th>
+        <th>صغيرة</th>
+        <th>المبلغ</th>
+        <th>الكمية (طن)</th>
+    </tr>
+    {% for row in records %}
+    <tr>
+        <td>{{ row["customer_type"] }}</td>
+        <td>{{ row["large_qty"] }}</td>
+        <td>{{ row["medium_qty"] }}</td>
+        <td>{{ row["small_qty"] }}</td>
+        <td>{{ row["total_price"] }} MRU</td>
+        <td>{{ row["total_gas"] | round(3) }} طن</td>
+    </tr>
+    {% endfor %}
+</table>
+<a href="{{ url_for('daily_summary') }}">🔙 العودة للسجل اليومي</a>
+<td><a href="{{ url_for('delete_transaction', id=row['id']) }}">🗑️ حذف</a></td>

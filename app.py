@@ -121,3 +121,60 @@ def delete_transaction(transaction_id):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+@app.route("/daily-summary")
+def daily_summary():
+    summaries = defaultdict(lambda: {"total_money": 0, "total_gas": 0, "count": 0})
+    with open("transactions.csv", newline='', encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            date = row["date"]
+            summaries[date]["total_money"] += float(row["total_price"])
+            summaries[date]["total_gas"] += float(row["total_gas"])
+            summaries[date]["count"] += 1
+    return render_template("daily_summary.html", summaries=summaries)
+@app.route("/summary/<date>")
+def summary_day(date):
+    records = []
+    with open("transactions.csv", newline='', encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if row["date"] == date:
+                records.append(row)
+    return render_template("summary_day.html", date=date, records=records)
+@app.route("/delete/<id>", methods=["GET", "POST"])
+def delete_transaction(id):
+    if request.method == "POST":
+        # حذف المعاملة من CSV
+        rows = []
+        with open("transactions.csv", newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row["id"] != id:
+                    rows.append(row)
+
+        with open("transactions.csv", "w", newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+            writer.writeheader()
+            writer.writerows(rows)
+
+        return redirect(url_for("daily_summary"))
+
+    return render_template("confirm_delete.html", id=id)
+@app.route("/delete_day/<date>", methods=["GET", "POST"])
+def delete_day(date):
+    if request.method == "POST":
+        rows = []
+        with open("transactions.csv", newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row["date"] != date:
+                    rows.append(row)
+
+        with open("transactions.csv", "w", newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+            writer.writeheader()
+            writer.writerows(rows)
+
+        return redirect(url_for("daily_summary"))
+
+    return render_template("confirm_delete_day.html", date=date)
