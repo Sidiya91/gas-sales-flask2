@@ -1,19 +1,53 @@
-<h2>📅 سجل الأيام</h2>
-<table border="1">
-    <tr>
-        <th>📆 التاريخ</th>
-        <th>💰 المبلغ الإجمالي</th>
-        <th>🛢️ كمية الغاز (طن)</th>
-        <th>🔍 عرض التفاصيل</th>
-        <th>🗑️ حذف اليوم</th>
-    </tr>
-    {% for date, summary in summaries.items() %}
-    <tr>
-        <td>{{ date }}</td>
-        <td>{{ summary.total_money }} MRU</td>
-        <td>{{ summary.total_gas | round(2) }} طن</td>
-        <td><a href="{{ url_for('summary_day', date=date) }}">عرض</a></td>
-        <td><a href="{{ url_for('delete_day', date=date) }}">🗑️ حذف</a></td>
-    </tr>
-    {% endfor %}
-</table>
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>ملخص اليوم</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>📅 ملخص معاملات اليوم</h1>
+    <p><strong>💰 إجمالي المبلغ:</strong> {{ total_money }} MRU</p>
+    <p><strong>⛽ كمية الغاز المباعة:</strong> {{ total_gas }} طن</p>
+
+    {% if transactions %}
+    <table>
+        <thead>
+            <tr>
+                <th>الوقت</th>
+                <th>النوع</th>
+                <th>كبير</th>
+                <th>متوسط</th>
+                <th>صغير</th>
+                <th>السعر</th>
+                <th>الكمية (طن)</th>
+                <th>حذف</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tx in transactions %}
+            <tr>
+                <td>{{ tx.datetime }}</td>
+                <td>{{ tx.customer_type }}</td>
+                <td>{{ tx.large_qty }}</td>
+                <td>{{ tx.medium_qty }}</td>
+                <td>{{ tx.small_qty }}</td>
+                <td>{{ tx.total_price }}</td>
+                <td>{{ tx.total_gas }}</td>
+                <td>
+                    <form action="/delete/{{ tx.id }}" method="post" onsubmit="return confirm('هل تريد حذف هذه المعاملة؟');">
+                        <button type="submit">🗑️ حذف</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>لا توجد معاملات مسجلة اليوم.</p>
+    {% endif %}
+
+    <a href="/">الرجوع للرئيسية</a>
+</body>
+</html>
