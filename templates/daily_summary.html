@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ملخص المبيعات</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>ملخص اليوم</h1>
+
+        <p><strong>📦 المبلغ الإجمالي:</strong> {{ total_money }} MRU</p>
+        <p><strong>⛽ كمية الغاز المباعة:</strong> {{ total_gas }} كغ</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>التاريخ</th>
+                    <th>الزبون</th>
+                    <th>كبيرة</th>
+                    <th>متوسطة</th>
+                    <th>صغيرة</th>
+                    <th>السعر</th>
+                    <th>الكمية</th>
+                    <th>حذف</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td>{{ t.datetime }}</td>
+                    <td>{{ t.customer_type }}</td>
+                    <td>{{ t.large_qty }}</td>
+                    <td>{{ t.medium_qty }}</td>
+                    <td>{{ t.small_qty }}</td>
+                    <td>{{ t.total_price }}</td>
+                    <td>{{ t.total_gas }}</td>
+                    <td><a class="delete" href="/delete/{{ t.id }}">🗑️</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a class="link" href="/">⬅️ العودة للتسجيل</a>
+    </div>
+</body>
+</html>
