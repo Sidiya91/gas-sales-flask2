@@ -9,7 +9,7 @@ app = Flask(__name__)
 DATA_FILE = 'transactions.csv'
 
 PRICES = {
-    0: {'large': 333.3, 'medium': 160, 'small': 73},
+    0: {'large': 333, 'medium': 160, 'small': 73},
     1: {'large': 313, 'medium': 150.5, 'small': 68.5},
     2: {'large': 320, 'medium': 153.5, 'small': 70}
 }
