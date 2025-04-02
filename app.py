@@ -103,3 +103,9 @@ def daily_summary():
 
 if __name__ == "__main__":
     app.run(debug=True)
+import os
+
+# في نهاية الملف:
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # يأخذ PORT من Render أو 5000 محليًا
+    app.run(host="0.0.0.0", port=port)
