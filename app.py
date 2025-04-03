@@ -1,82 +1,66 @@
 from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime
-import csv
-import os
+import sqlite3
 import uuid
-from collections import defaultdict
+import os
 
 app = Flask(__name__)
+DB_FILE = "database.db"
 
-DATA_FILE = 'transactions.csv'
-
+# أسعار القناني حسب نوع الزبون
 PRICES = {
     0: {'large': 3330, 'medium': 1600, 'small': 730},
     1: {'large': 3130, 'medium': 1505, 'small': 685},
-    2: {'large': 3200, 'medium': 1535, 'small': 700}
+    2: {'large': 3200, 'medium': 1535, 'small': 700},
 }
 
 WEIGHTS = {'large': 12, 'medium': 6, 'small': 2.7}
 
-def archive_if_new_day():
-    today = datetime.now().strftime('%Y-%m-%d')
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, encoding='utf-8') as file:
-            reader = csv.DictReader(file)
-            rows = list(reader)
-            if rows:
-                first_date = rows[0]['datetime'].split(' ')[0]
-                if first_date != today:
-                    archive_name = f"transactions_{first_date}.csv"
-                    os.rename(DATA_FILE, archive_name)
-                    with open(DATA_FILE, mode='w', newline='', encoding='utf-8') as f:
-                        writer = csv.writer(f)
-                        writer.writerow(['id', 'datetime', 'customer_type', 'large_qty', 'medium_qty', 'small_qty', 'total_price', 'total_gas'])
+def init_db():
+    with sqlite3.connect(DB_FILE) as conn:
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS transactions (
+            id TEXT PRIMARY KEY,
+            datetime TEXT,
+            customer_type INTEGER,
+            large_qty INTEGER,
+            medium_qty INTEGER,
+            small_qty INTEGER,
+            total_price REAL,
+            total_gas REAL
+        )
+        """)
 
-def save_transaction(transaction):
-    with open(DATA_FILE, mode='a', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file)
-        writer.writerow([
-            transaction['id'],
-            transaction['datetime'],
-            transaction['customer_type'],
-            transaction['large_qty'],
-            transaction['medium_qty'],
-            transaction['small_qty'],
-            transaction['total_price'],
-            transaction['total_gas']
-        ])
+# استدعاء قاعدة البيانات
+init_db()
 
-def read_transactions_for_today():
-    today = datetime.now().strftime('%Y-%m-%d')
-    transactions = []
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, mode='r', encoding='utf-8') as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                if today in row['datetime']:
-                    transactions.append({
-                        "id": row['id'],
-                        "datetime": row['datetime'],
-                        "customer_type": int(row['customer_type']),
-                        "large_qty": int(row['large_qty']),
-                        "medium_qty": int(row['medium_qty']),
-                        "small_qty": int(row['small_qty']),
-                        "total_price": float(row['total_price']),
-                        "total_gas": float(row['total_gas'])
-                    })
-    return transactions
+def insert_transaction(data):
+    with sqlite3.connect(DB_FILE) as conn:
+        conn.execute("""
+            INSERT INTO transactions VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            data['id'], data['datetime'], data['customer_type'],
+            data['large_qty'], data['medium_qty'], data['small_qty'],
+            data['total_price'], data['total_gas']
+        ))
+
+def get_transactions_by_date(date):
+    with sqlite3.connect(DB_FILE) as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM transactions WHERE datetime LIKE ?", (f"{date}%",))
+        rows = cur.fetchall()
+    return rows
 
 def delete_transaction_by_id(transaction_id):
-    rows = []
-    with open(DATA_FILE, mode='r', encoding='utf-8') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            if row['id'] != transaction_id:
-                rows.append(row)
-    with open(DATA_FILE, mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=['id', 'datetime', 'customer_type', 'large_qty', 'medium_qty', 'small_qty', 'total_price', 'total_gas'])
-        writer.writeheader()
-        writer.writerows(rows)
+    with sqlite3.connect(DB_FILE) as conn:
+        conn.execute("DELETE FROM transactions WHERE id = ?", (transaction_id,))
+
+def get_summary_by_date(date):
+    with sqlite3.connect(DB_FILE) as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT SUM(total_price), SUM(total_gas) FROM transactions WHERE datetime LIKE ?", (f"{date}%",))
+        result = cur.fetchone()
+    return result if result else (0, 0)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -88,19 +72,8 @@ def index():
         small_qty = int(request.form["small_qty"])
 
         price_table = PRICES[customer_type]
-
-        total_price = (
-            large_qty * price_table['large'] +
-            medium_qty * price_table['medium'] +
-            small_qty * price_table['small']
-        )
-
-        total_gas_kg = (
-            large_qty * WEIGHTS['large'] +
-            medium_qty * WEIGHTS['medium'] +
-            small_qty * WEIGHTS['small']
-        )
-        total_gas = total_gas_kg / 1000
+        total_price = large_qty * price_table['large'] + medium_qty * price_table['medium'] + small_qty * price_table['small']
+        total_gas = (large_qty * WEIGHTS['large'] + medium_qty * WEIGHTS['medium'] + small_qty * WEIGHTS['small']) / 1000
 
         transaction = {
             "id": str(uuid.uuid4()),
@@ -113,26 +86,28 @@ def index():
             "total_gas": total_gas
         }
 
-        archive_if_new_day()
-        save_transaction(transaction)
-        message = f"✅ تمت العملية بنجاح! المبلغ المطلوب: {total_price} MRU"
+        insert_transaction(transaction)
+        message = f"✅ تم تسجيل المعاملة بنجاح. المبلغ: {total_price} MRU"
 
     return render_template("index.html", message=message)
 
-@app.route("/daily-summary")
-def daily_summary():
-    transactions = read_transactions_for_today()
-    total_money = sum(t["total_price"] for t in transactions)
-    total_gas = sum(t["total_gas"] for t in transactions)
-    return render_template("daily_summary.html", transactions=transactions, total_money=total_money, total_gas=total_gas)
+@app.route("/summary/<date>")
+def summary(date):
+    rows = get_transactions_by_date(date)
+    total_price, total_gas = get_summary_by_date(date)
+    is_today = (date == datetime.now().strftime("%Y-%m-%d"))
+    return render_template("daily_summary.html", rows=rows, date=date, total_price=total_price, total_gas=total_gas, is_today=is_today)
 
-@app.route("/delete/<id>", methods=["GET", "POST"])
-def delete_transaction(id):
-    if request.method == "POST":
+@app.route("/delete/<id>/<date>", methods=["POST"])
+def delete_transaction(id, date):
+    if date == datetime.now().strftime("%Y-%m-%d"):
         delete_transaction_by_id(id)
-        return redirect(url_for("daily_summary"))
-    return render_template("confirm_delete.html", id=id)
+    return redirect(url_for('summary', date=date))
 
-if __name__ == "__main__":
+@app.route("/today")
+def today():
+    return redirect(url_for("summary", date=datetime.now().strftime("%Y-%m-%d")))
+
+if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)

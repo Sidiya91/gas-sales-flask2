@@ -1,100 +1,57 @@
 body {
-    font-family: "Segoe UI", sans-serif;
-    background: #f7f9fc;
-    margin: 0;
-    padding: 0;
-}
-
-.container {
-    max-width: 700px;
-    margin: auto;
-    background: white;
+    font-family: Arial, sans-serif;
+    direction: rtl;
+    background-color: #f9f9f9;
     padding: 20px;
-    margin-top: 40px;
-    border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
 }
 
-h1 {
+h2 {
     color: #2c3e50;
-    text-align: center;
+}
+
+form {
     margin-bottom: 20px;
 }
 
-form label {
-    display: block;
-    margin-top: 10px;
-    font-weight: bold;
-}
-
-input, select {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-}
-
-button {
-    width: 100%;
-    margin-top: 20px;
-    padding: 10px;
-    background: #0077cc;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-button:hover {
-    background: #005fa3;
-}
-
-.message {
-    margin-top: 20px;
-    background: #dff0d8;
-    padding: 10px;
-    border-radius: 6px;
-    color: #3c763d;
-    text-align: center;
-}
-
-a.link {
+label {
     display: inline-block;
-    margin-top: 20px;
-    text-align: center;
-    width: 100%;
-    color: #0077cc;
-    text-decoration: none;
-    font-weight: bold;
+    width: 150px;
+    margin-bottom: 5px;
 }
 
-a.link:hover {
-    text-decoration: underline;
+input, select, button {
+    padding: 5px;
+    margin: 5px 0;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+    background-color: white;
+    box-shadow: 0 0 10px #ccc;
 }
 
-table, th, td {
+table th, table td {
+    padding: 10px;
     border: 1px solid #ddd;
-}
-
-th, td {
     text-align: center;
-    padding: 8px;
 }
 
-th {
-    background-color: #f1f1f1;
+button {
+    background-color: #3498db;
+    border: none;
+    color: white;
+    cursor: pointer;
 }
 
-a.delete {
-    color: red;
-    font-weight: bold;
+button:hover {
+    background-color: #2980b9;
+}
+
+a {
+    display: inline-block;
+    margin-top: 15px;
     text-decoration: none;
+    color: #2c3e50;
+    font-weight: bold;
 }

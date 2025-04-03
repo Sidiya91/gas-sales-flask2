@@ -51,3 +51,61 @@
     <a href="/">الرجوع للرئيسية</a>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>ملخص المعاملات - {{ date }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>📅 ملخص المعاملات ليوم {{ date }}</h2>
+    <p><strong>💰 المبلغ الإجمالي:</strong> {{ total_price }} MRU</p>
+    <p><strong>⛽ كمية الغاز المباعة:</strong> {{ total_gas }} طن</p>
+
+    {% if rows %}
+    <table>
+        <thead>
+            <tr>
+                <th>الوقت</th>
+                <th>نوع الزبون</th>
+                <th>كبيرة</th>
+                <th>متوسطة</th>
+                <th>صغيرة</th>
+                <th>السعر</th>
+                <th>الكمية (طن)</th>
+                {% if is_today %}
+                <th>حذف</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>{{ row[4] }}</td>
+                <td>{{ row[5] }}</td>
+                <td>{{ row[6] }}</td>
+                <td>{{ row[7] }}</td>
+                {% if is_today %}
+                <td>
+                    <form action="{{ url_for('delete_transaction', id=row[0], date=date) }}" method="post"
+                          onsubmit="return confirm('هل أنت متأكد من الحذف؟');">
+                        <button type="submit">🗑️ حذف</button>
+                    </form>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>لا توجد معاملات في هذا اليوم.</p>
+    {% endif %}
+
+    <br>
+    <a href="{{ url_for('index') }}">⬅️ الرجوع للرئيسية</a>
+</body>
+</html>

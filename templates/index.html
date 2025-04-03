@@ -1,37 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
-    <title>تسجيل عملية بيع</title>
+    <meta charset="UTF-8">
+    <title>إدخال معاملة</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>تسجيل عملية بيع</h1>
-        <form method="post">
-            <label>نوع الزبون:</label>
-            <select name="customer_type" required>
-                <option value="0">زبون عادي</option>
-                <option value="1">موزع</option>
-                <option value="2">شاحنة</option>
-            </select>
+    <h2>إدخال معاملة جديدة</h2>
+    <form method="post">
+        <label>نوع الزبون:</label>
+        <select name="customer_type">
+            <option value="0">عادي</option>
+            <option value="1">موزع</option>
+            <option value="2">شاحنة</option>
+        </select><br>
+        <label>عدد القناني الكبيرة:</label>
+        <input type="number" name="large_qty" value="0"><br>
+        <label>عدد القناني المتوسطة:</label>
+        <input type="number" name="medium_qty" value="0"><br>
+        <label>عدد القناني الصغيرة:</label>
+        <input type="number" name="small_qty" value="0"><br>
+        <button type="submit">تسجيل</button>
+    </form>
 
-            <label>عدد القنينات الكبيرة:</label>
-            <input type="number" name="large_qty" min="0" required>
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
 
-            <label>عدد القنينات المتوسطة:</label>
-            <input type="number" name="medium_qty" min="0" required>
-
-            <label>عدد القنينات الصغيرة:</label>
-            <input type="number" name="small_qty" min="0" required>
-
-            <button type="submit">تسجيل</button>
-        </form>
-
-        {% if message %}
-            <div class="message">{{ message }}</div>
-        {% endif %}
-
-        <a class="link" href="/daily-summary">عرض ملخص اليوم</a>
-    </div>
+    <a href="{{ url_for('today') }}">📅 الذهاب إلى سجل اليوم</a>
 </body>
 </html>
